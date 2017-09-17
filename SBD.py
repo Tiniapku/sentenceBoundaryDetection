@@ -10,9 +10,12 @@ class sentenceBoundaryDetection(object):
 		self.right = 0
 		self.precision = 0.0
 		self.output = []
+		self.true = 0
+		self.truepositive = 0
+		self.alltrue = 0
 		self.address = ["Mr", "Ms", "Dr", "Mrs", "Jr","Messrs", "Prof"]
 		self.leftSet = defaultdict(int)
-		self.rightSet = defaultdict(int)
+		self.allSet = defaultdict(int)
 
 
 	def processTrainData(self, trainData):
@@ -36,7 +39,7 @@ class sentenceBoundaryDetection(object):
 			entry = entry.strip()
 			num, word, tag = entry.split(' ')
 			if waitingForRight and feature:
-				#if lasttag == "EOS":
+				#if lasttag != "EOS":
 					#self.rightSet[word] += 1
 				self.setRightFeature(feature, word)
 				waitingForRight = False
@@ -47,6 +50,7 @@ class sentenceBoundaryDetection(object):
 					Lword = word.replace(".", "")
 					self.leftSet[Lword] += 1
 					self.category.append(False)
+				self.allSet[Lword] += 1
 				waitingForRight = True
 				if feature:
 					self.featureList.append(feature)
@@ -61,9 +65,9 @@ class sentenceBoundaryDetection(object):
 			Lword = featureList[i][0]
 			Rword = featureList[i][1]
 			a = self.leftSet[Lword]
-			b = self.rightSet[Rword]
+			b = self.allSet[Lword]
 			featureList[i][0] = a
-			featureList[i][1] = b
+			featureList[i][1] = 0
 
 	def processTestData(self, testData):
 		testList = []
@@ -99,13 +103,15 @@ class sentenceBoundaryDetection(object):
 		for tag in tagList:
 			if tag == answer[cur]:
 				self.right += 1
+			else:
+				print feature[cur], "mytag: ", tag, "rightanswer: ", answer[cur]
 			cur += 1
 			self.output.append(tag)
 		#print self.output
 
 	def getPrecision(self):
 
-		return self.right * 1.0 / self.total
+		return "Correct %: ", self.right * 1.0 / self.total,"Precision: ", self.truepositive * 1.0/ self.true, "Recall: ", self.truepositive * 1.0 / self.alltrue
 
 	def getFeature(self, word):
 		Lword = word.replace(".", "")
@@ -141,6 +147,12 @@ class sentenceBoundaryDetection(object):
 		for entry in test.readlines():
 			num, word, tag = entry.split(' ')
 			if self.finddot(word):
+				if di[tag.strip()]:
+					self.alltrue += 1
+				if self.output[cur]:
+					self.true += 1
+					if di[tag.strip()]:
+						self.truepositive += 1
 				if self.output[cur] != di[tag.strip()]:
 					Lword = word.replace(".","")
 					print num, word, tag.strip(), self.output[cur], self.leftSet[Lword]
@@ -159,8 +171,8 @@ if __name__ == '__main__':
 	#print mySBD.output
 	test.close()
 	test = open(sys.argv[2], 'r')
-	f = open('SBD.test.out', 'w')
-	mySBD.out(test, f)
+	#f = open('SBD.test.out', 'w')
+	#mySBD.out(test, f)
 	mySBD.debug(test)
 	test.close()
 	#f.close()
