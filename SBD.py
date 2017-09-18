@@ -15,7 +15,7 @@ class sentenceBoundaryDetection(object):
 		self.alltrue = 0
 		self.address = ["Mr", "Ms", "Dr", "Mrs", "Jr","Messrs", "Prof"]
 		self.leftSet = defaultdict(int)
-		self.allSet = defaultdict(int)
+		self.rightSet = defaultdict(int)
 
 
 	def processTrainData(self, trainData):
@@ -39,8 +39,8 @@ class sentenceBoundaryDetection(object):
 			entry = entry.strip()
 			num, word, tag = entry.split(' ')
 			if waitingForRight and feature:
-				#if lasttag != "EOS":
-					#self.rightSet[word] += 1
+				if lasttag != "EOS":
+					self.rightSet[word] += 1
 				self.setRightFeature(feature, word)
 				waitingForRight = False
 			if tag != "TOK":
@@ -50,7 +50,6 @@ class sentenceBoundaryDetection(object):
 					Lword = word.replace(".", "")
 					self.leftSet[Lword] += 1
 					self.category.append(False)
-				self.allSet[Lword] += 1
 				waitingForRight = True
 				if feature:
 					self.featureList.append(feature)
@@ -58,16 +57,20 @@ class sentenceBoundaryDetection(object):
 				lasttag = tag
 		if feature:
 			self.featureList.append(feature)
-		self.refineFeature(self.featureList)
+		self.refineFeature(self.featureList, False, False)
 
-	def refineFeature(self, featureList):
+	def refineFeature(self, featureList, test5, test3):
 		for i in xrange(len(featureList)):
 			Lword = featureList[i][0]
 			Rword = featureList[i][1]
 			a = self.leftSet[Lword]
-			b = self.allSet[Lword]
+			b = self.rightSet[Rword]
 			featureList[i][0] = a
 			featureList[i][1] = 0
+			if test5:
+				featureList[i] = featureList[i][:5]
+			elif test3:
+				featureList[i] = featureList[i][5:]
 
 	def processTestData(self, testData):
 		testList = []
@@ -88,7 +91,7 @@ class sentenceBoundaryDetection(object):
 				feature = self.getFeature(word)
 		if feature:
 			testList.append(feature)
-		self.refineFeature(testList)
+		self.refineFeature(testList, False, False)
 		return testList, answer
 
 
@@ -103,8 +106,8 @@ class sentenceBoundaryDetection(object):
 		for tag in tagList:
 			if tag == answer[cur]:
 				self.right += 1
-			else:
-				print feature[cur], "mytag: ", tag, "rightanswer: ", answer[cur]
+			#else:
+				#print feature[cur], "mytag: ", tag, "rightanswer: ", answer[cur]
 			cur += 1
 			self.output.append(tag)
 		#print self.output
@@ -133,9 +136,15 @@ class sentenceBoundaryDetection(object):
 		for entry in test.readlines():
 			num, word, tag = entry.split(' ')
 			if self.finddot(word):
+				if di[tag.strip()]:
+					self.alltrue += 1
+				if self.output[cur]:
+					self.true += 1
+					if di[tag.strip()]:
+						self.truepositive += 1
 				outList += " ".join([num, word, "EOS" if self.output[cur] else "NEOS"]) + '\n'
-				if self.output[cur] != di[tag.strip()]:
-					print num, word, tag.strip(), self.output[cur]
+				#if self.output[cur] != di[tag.strip()]:
+					#print num, word, tag.strip(), self.output[cur]
 				cur += 1
 			else:
 				outList += entry
@@ -161,20 +170,16 @@ if __name__ == '__main__':
 	train = open(sys.argv[1], 'r')
 	mySBD = sentenceBoundaryDetection()
 	mySBD.processTrainData(train)
-	#print mySBD.featureList
-	#print mySBD.category
 	train.close()
 	mySBD.training()
 	test = open(sys.argv[2], 'r')
 	testList, answer = mySBD.processTestData(test)
 	mySBD.classify(testList, answer)
-	#print mySBD.output
 	test.close()
 	test = open(sys.argv[2], 'r')
-	#f = open('SBD.test.out', 'w')
-	#mySBD.out(test, f)
-	mySBD.debug(test)
+	f = open('SBD.test.out', 'w')
+	mySBD.out(test, f)
+	#mySBD.debug(test)
 	test.close()
-	#f.close()
-	#print mySBD.featureList
+	f.close()
 	print mySBD.getPrecision()

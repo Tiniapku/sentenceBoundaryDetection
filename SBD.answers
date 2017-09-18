@@ -1,0 +1,16 @@
+- A description of your own three additional features
+	- if the dot appears as ".." or "...". They are almost NEOS, i.e 306179 manufactured... NEOS
+	_ if R is including a quote mark. The word are almost EOS, i.e 306265 painkiller. EOS 306266 " TOK
+
+- The accuracy of my system on the test data using all eight feaatures:
+	('Correct %: ', 0.9891278375149343, 'Precision: ', 0.9942784488239034, 'Recall: ', 0.9912850578355252)
+	The feature(2) - word to the right of "." (R) is actually abandoned in this result.
+	If keep feature 2, the result looks like this:
+	('Correct %: ', 0.9020310633213859, 'Precision: ', 0.8853333333333333, 'Recall: ', 0.9995246395183014)
+	The recall value increases a little bit while precision decreases a lot.
+
+- The accuracy of my system on the test data using only the five core features from the class
+	('Correct %: ', 0.8991636798088412, 'Precision: ', 0.8832188420019627, 'Recall: ', 0.998257011567105)
+
+- The accuracy of my system on the test data using only my own three additional features
+	('Correct %: ', 0.8437275985663082, 'Precision: ', 0.8284101352238414, 'Recall: ', 0.9998415465061005)
