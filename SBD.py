@@ -1,5 +1,7 @@
+#Tianyi Liu | tianyil | 16069542
 import sys
 from sklearn import tree
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from collections import defaultdict
 class sentenceBoundaryDetection(object):
 	def __init__(self):
@@ -16,6 +18,7 @@ class sentenceBoundaryDetection(object):
 		self.address = ["Mr", "Ms", "Dr", "Mrs", "Jr","Messrs", "Prof"]
 		self.leftSet = defaultdict(int)
 		self.rightSet = defaultdict(int)
+		self.result = []
 
 
 	def processTrainData(self, trainData):
@@ -142,6 +145,7 @@ class sentenceBoundaryDetection(object):
 					self.true += 1
 					if di[tag.strip()]:
 						self.truepositive += 1
+				self.result.append(di[tag.strip()])
 				outList += " ".join([num, word, "EOS" if self.output[cur] else "NEOS"]) + '\n'
 				#if self.output[cur] != di[tag.strip()]:
 					#print num, word, tag.strip(), self.output[cur]
@@ -162,6 +166,7 @@ class sentenceBoundaryDetection(object):
 					self.true += 1
 					if di[tag.strip()]:
 						self.truepositive += 1
+				self.result.append(di[tag.strip])
 				if self.output[cur] != di[tag.strip()]:
 					Lword = word.replace(".","")
 					print num, word, tag.strip(), self.output[cur], self.leftSet[Lword]
@@ -182,4 +187,8 @@ if __name__ == '__main__':
 	#mySBD.debug(test)
 	test.close()
 	f.close()
-	print mySBD.getPrecision()
+	print "Result of my own calculation: ", mySBD.getPrecision()
+	print "Result of sklearn scores() function: "
+	print "accuracy: ", accuracy_score(mySBD.result, mySBD.output)
+	print "precision:", precision_score(mySBD.result, mySBD.output)
+	print "Recall: ", recall_score(mySBD.result, mySBD.output)
